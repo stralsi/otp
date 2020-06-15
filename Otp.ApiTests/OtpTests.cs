@@ -14,6 +14,10 @@ namespace Otp.ApiTests
 {
     public class OtpTests
     {
+        public OtpTests()
+        {
+            InitializeUsers();
+        }
         [Fact]
         public async Task Post_CorrectInput_ReturnsOtpAndExpirationDate()
         {
@@ -53,6 +57,9 @@ namespace Otp.ApiTests
             return server.CreateClient();
         }
 
+        private void InitializeUsers() {
+            OtpController.Users = new List<User>();
+        }
         private void CreateUser(User user) {
             OtpController.Users.Add(user);
         }
