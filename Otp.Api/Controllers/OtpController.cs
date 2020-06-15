@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using OtpNet;
 
@@ -8,11 +9,23 @@ namespace Otp.Api.Controllers
   [Route("/api/otp")]
   public class OtpController : ControllerBase
   {
+    // let's pretend this is a database
+    public static List<User> Users = new List<User> {
+      new User {
+        Id = "someUser",
+        SecretKey = "12345678901234567890"
+      }
+    };
+
+
     [HttpPost]
     public ActionResult Create([FromBody] CreateRequest request)
     {
-      var secretKey = "12345678901234567890"; // todo: not so secret
-      var otpCalc = new Totp(System.Text.Encoding.UTF8.GetBytes(secretKey));
+      var user = Users.Find(u => u.Id == request.UserId);
+      if(user == null) {
+        return NotFound();
+      }
+      var otpCalc = new Totp(System.Text.Encoding.UTF8.GetBytes(user.SecretKey));
       var otp = otpCalc.ComputeTotp(request.CreatedAt.UtcDateTime);
       var result = new CreateResponse {
         OneTimePassword = otp,
@@ -31,5 +44,9 @@ namespace Otp.Api.Controllers
       public string OneTimePassword {get;set;}
       public DateTimeOffset ExpiresAt {get;set;}
     }
+  }
+  public class User {
+      public string Id {get;set;}
+      public string SecretKey {get;set;}
   }
 }
