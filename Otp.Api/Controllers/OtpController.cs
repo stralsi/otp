@@ -7,14 +7,20 @@ namespace Otp.Api.Controllers
   [Route("/api/otp")]
   public class OtpController : ControllerBase
   {
-    public ActionResult Get()
+    [HttpPost]
+    public ActionResult Create([FromBody] OtpRequest request)
     {
       var result = new {
-        Password = "foo",
+        Password = request.UserId,
         ExpiresAt = DateTimeOffset.Now.AddMinutes(1)
       };
 
       return new JsonResult(result);
+    }
+
+    public class OtpRequest {
+      public string UserId {get;set;}
+      public DateTime DateTime {get;set;}
     }
   }
 }
