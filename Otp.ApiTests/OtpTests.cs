@@ -17,15 +17,13 @@ namespace Otp.ApiTests
         [Fact]
         public async Task Post_CorrectInput_ReturnsOtpAndExpirationDate()
         {
-            var server = new TestServer(new WebHostBuilder().UseStartup<Otp.Api.Startup>());
-            var client =  server.CreateClient();
+            CreateUser(new User{Id = "userFoo", SecretKey="12345678901234567890"});
             var requestInput = JsonSerializer.Serialize(new OtpController.CreateRequest {
                 UserId = "userFoo",
                 CreatedAt = new DateTimeOffset(2020,01,01,0,0,0, new TimeSpan(0,0,0))
             });
-            OtpController.Users = new List<User>{new User{Id = "userFoo", SecretKey="12345678901234567890"}};
 
-            var response = await client.PostAsync("/api/otp", new StringContent(requestInput,Encoding.UTF8,"application/json"));
+            var response = await CreateHttpClient().PostAsync("/api/otp", new StringContent(requestInput,Encoding.UTF8,"application/json"));
             
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             var content = await response.Content.ReadAsStringAsync();
@@ -39,17 +37,24 @@ namespace Otp.ApiTests
         [Fact]
         public async Task Post_UserNotFound_Returns404()
         {
-            var server = new TestServer(new WebHostBuilder().UseStartup<Otp.Api.Startup>());
-            var client =  server.CreateClient();
+            CreateUser(new User{Id = "userFoo", SecretKey="12345678901234567890"});
             var requestInput = JsonSerializer.Serialize(new OtpController.CreateRequest {
                 UserId = "does-not-exist",
                 CreatedAt = DateTime.Now
             });
-            OtpController.Users = new List<User>{new User{Id = "userFoo", SecretKey="12345678901234567890"}};
 
-            var response = await client.PostAsync("/api/otp", new StringContent(requestInput,Encoding.UTF8,"application/json"));
+            var response = await CreateHttpClient().PostAsync("/api/otp", new StringContent(requestInput,Encoding.UTF8,"application/json"));
 
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        private HttpClient CreateHttpClient(){
+            var server = new TestServer(new WebHostBuilder().UseStartup<Otp.Api.Startup>());
+            return server.CreateClient();
+        }
+
+        private void CreateUser(User user) {
+            OtpController.Users.Add(user);
         }
     }
 }
