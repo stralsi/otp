@@ -19,7 +19,7 @@ namespace Otp.ApiTests
             InitializeUsers();
         }
         [Fact]
-        public async Task Post_CorrectInput_ReturnsOtpAndExpirationDate()
+        public async Task Create_CorrectInput_ReturnsOtpAndExpirationDate()
         {
             CreateUser(new User{Id = "userFoo", SecretKey="12345678901234567890"});
             var requestInput = JsonSerializer.Serialize(new OtpController.CreateRequest {
@@ -39,17 +39,61 @@ namespace Otp.ApiTests
         }
 
         [Fact]
-        public async Task Post_UserNotFound_Returns404()
+        public async Task Create_UserNotFound_Returns404()
         {
             CreateUser(new User{Id = "userFoo", SecretKey="12345678901234567890"});
             var requestInput = JsonSerializer.Serialize(new OtpController.CreateRequest {
                 UserId = "does-not-exist",
                 CreatedAt = DateTime.Now
             });
-
             var response = await CreateHttpClient().PostAsync("/api/otp", new StringContent(requestInput,Encoding.UTF8,"application/json"));
 
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Verify_CorrectInput_Successful()
+        {
+            CreateUser(new User{Id = "userFoo", SecretKey="12345678901234567890"});
+            var requestInput = JsonSerializer.Serialize(new OtpController.VerifyRequest {
+                UserId = "userFoo",
+                OneTimePassword = "687028", // I found this value by running the topt library on this secret key with the date 2010-01-01 00:00,
+            });
+            OtpController.UtcNow = () => new DateTimeOffset(2020,01,01,0,0,10, new TimeSpan(0,0,0));
+
+            var response = await CreateHttpClient().PostAsync("/api/otp/verify", new StringContent(requestInput,Encoding.UTF8,"application/json"));
+            
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Verify_Incorrectusername_Unauthorized()
+        {
+            CreateUser(new User{Id = "userFoo", SecretKey="12345678901234567890"});
+            var requestInput = JsonSerializer.Serialize(new OtpController.VerifyRequest {
+                UserId = "does-not-exist",
+                OneTimePassword = "foo",
+            });
+            OtpController.UtcNow = () => new DateTimeOffset(2020,01,01,0,0,10, new TimeSpan(0,0,0));
+
+            var response = await CreateHttpClient().PostAsync("/api/otp/verify", new StringContent(requestInput,Encoding.UTF8,"application/json"));
+            
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Verify_IncorrectPassword_Unauthorized()
+        {
+            CreateUser(new User{Id = "userFoo", SecretKey="12345678901234567890"});
+            var requestInput = JsonSerializer.Serialize(new OtpController.VerifyRequest {
+                UserId = "userFoo",
+                OneTimePassword = "incorrect",
+            });
+            OtpController.UtcNow = () => new DateTimeOffset(2020,01,01,0,0,10, new TimeSpan(0,0,0));
+
+            var response = await CreateHttpClient().PostAsync("/api/otp/verify", new StringContent(requestInput,Encoding.UTF8,"application/json"));
+            
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
         private HttpClient CreateHttpClient(){

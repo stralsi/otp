@@ -16,7 +16,7 @@ namespace Otp.Api.Controllers
         SecretKey = "12345678901234567890"
       }
     };
-
+    public static Func<DateTimeOffset> UtcNow = () => DateTimeOffset.UtcNow;
 
     [HttpPost]
     public ActionResult Create([FromBody] CreateRequest request)
@@ -35,6 +35,27 @@ namespace Otp.Api.Controllers
       return new JsonResult(result);
     }
 
+    [HttpPost("verify")]
+    public ActionResult Verify([FromBody] VerifyRequest request) 
+    {
+      var user = Users.Find(u => u.Id == request.UserId);
+      if(user == null) {
+        return Unauthorized();
+      }
+      var otpCalc = new Totp(System.Text.Encoding.UTF8.GetBytes(user.SecretKey));
+      var validPassword = otpCalc.VerifyTotp(
+        UtcNow().DateTime,
+        request.OneTimePassword,
+        out var timeStepMatched,
+        VerificationWindow.RfcSpecifiedNetworkDelay
+      );
+      if(validPassword) {
+        return Ok();
+      }else {
+        return Unauthorized();
+      }
+    }
+
     public class CreateRequest {
       public string UserId {get;set;}
       public DateTimeOffset CreatedAt {get;set;}
@@ -44,9 +65,16 @@ namespace Otp.Api.Controllers
       public string OneTimePassword {get;set;}
       public DateTimeOffset ExpiresAt {get;set;}
     }
+
+    public class VerifyRequest
+    {
+      public string UserId {get;set;}      
+      public string OneTimePassword { get; set; }
+    }
   }
   public class User {
       public string Id {get;set;}
       public string SecretKey {get;set;}
   }
+
 }
