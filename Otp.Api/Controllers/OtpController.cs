@@ -1,6 +1,7 @@
 using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Otp.Api.Data;
 using OtpNet;
 
 namespace Otp.Api.Controllers
@@ -9,19 +10,18 @@ namespace Otp.Api.Controllers
   [Route("/api/otp")]
   public class OtpController : ControllerBase
   {
-    // let's pretend this is a database
-    public static List<User> Users = new List<User> {
-      new User {
-        Id = "someUser",
-        SecretKey = "12345678901234567890"
-      }
-    };
     public static Func<DateTimeOffset> UtcNow = () => DateTimeOffset.UtcNow;
+    private readonly ApplicationDbContext dbContext;
+
+    public OtpController(ApplicationDbContext dbContext)
+    {
+      this.dbContext = dbContext;
+    }
 
     [HttpPost]
-    public ActionResult Create([FromBody] CreateRequest request)
+    public async Task<ActionResult> Create([FromBody] CreateRequest request)
     {
-      var user = Users.Find(u => u.Id == request.UserId);
+      var user = await dbContext.Users.FindAsync(request.UserId);
       if(user == null) {
         return NotFound();
       }
@@ -36,9 +36,9 @@ namespace Otp.Api.Controllers
     }
 
     [HttpPost("verify")]
-    public ActionResult Verify([FromBody] VerifyRequest request) 
+    public async Task<ActionResult> Verify([FromBody] VerifyRequest request) 
     {
-      var user = Users.Find(u => u.Id == request.UserId);
+      var user = await dbContext.Users.FindAsync(request.UserId);
       if(user == null) {
         return Unauthorized();
       }
@@ -57,7 +57,7 @@ namespace Otp.Api.Controllers
     }
 
     public class CreateRequest {
-      public string UserId {get;set;}
+      public Guid UserId {get;set;}
       public DateTimeOffset CreatedAt {get;set;}
     }
 
@@ -68,13 +68,8 @@ namespace Otp.Api.Controllers
 
     public class VerifyRequest
     {
-      public string UserId {get;set;}      
+      public Guid UserId {get;set;}      
       public string OneTimePassword { get; set; }
     }
   }
-  public class User {
-      public string Id {get;set;}
-      public string SecretKey {get;set;}
-  }
-
 }
