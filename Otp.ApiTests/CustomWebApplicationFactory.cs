@@ -9,6 +9,7 @@ using Otp.Api.Data;
 using Otp.Api.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace Otp.ApiTests
 {
@@ -20,22 +21,12 @@ namespace Otp.ApiTests
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     { 
+      var testConfig = new ConfigurationBuilder()
+        .AddJsonFile("appSettings.Test.json")
+        .Build();
+      builder.UseConfiguration(testConfig);
       builder.ConfigureServices(services =>
       {
-        // Remove the app's ApplicationDbContext registration.
-        var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-        if (descriptor != null)
-        {
-            services.Remove(descriptor);
-        }
-
-        // Add ApplicationDbContext using an in-memory database for testing.
-        services.AddDbContext<ApplicationDbContext>(options =>
-        {
-          var connectionString = "Server=localhost;Database=otp_dev;User=sa;Password=Development_password123;";
-          options.UseSqlServer(connectionString);
-        });
-
         // Build the service provider.
         var sp = services.BuildServiceProvider();
 

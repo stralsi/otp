@@ -24,4 +24,7 @@
     <ProjectReference Include="..\Otp.Api\Otp.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appSettings.Test.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
