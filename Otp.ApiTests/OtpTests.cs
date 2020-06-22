@@ -31,7 +31,7 @@ namespace Otp.ApiTests
     {
       var requestInput = JsonSerializer.Serialize(new OtpController.CreateRequest
       {
-        UserId = Guid.Parse("00000000-0000-0000-0000-123456789012"),
+        LoginId = "mary",
         CreatedAt = new DateTimeOffset(2020, 01, 01, 0, 0, 0, new TimeSpan(0, 0, 0))
       });
 
@@ -51,7 +51,7 @@ namespace Otp.ApiTests
     {
       var requestInput = JsonSerializer.Serialize(new OtpController.CreateRequest
       {
-        UserId = Guid.NewGuid(), // does not exist
+        LoginId = "does not exist",
         CreatedAt = DateTimeOffset.UtcNow
       });
       var response = await httpClient.PostAsync("/api/otp", new StringContent(requestInput, Encoding.UTF8, "application/json"));
@@ -65,7 +65,7 @@ namespace Otp.ApiTests
       OtpController.UtcNow = () => new DateTimeOffset(2020, 01, 01, 0, 0, 10, new TimeSpan(0, 0, 0));
       var requestInput = JsonSerializer.Serialize(new OtpController.VerifyRequest
       {
-        UserId = Guid.Parse("00000000-0000-0000-0000-123456789012"),
+        LoginId = "mary",
         OneTimePassword = "687028", //Correct! I found this value by running the topt library on this secret key with the date 2010-01-01 00:00
       });
 
@@ -80,7 +80,7 @@ namespace Otp.ApiTests
       OtpController.UtcNow = () => new DateTimeOffset(2020, 01, 01, 0, 0, 10, new TimeSpan(0, 0, 0));
       var requestInput = JsonSerializer.Serialize(new OtpController.VerifyRequest
       {
-        UserId = Guid.NewGuid(), // does not exist
+        LoginId = "does not exist",
         OneTimePassword = "687028", // Correct! I found this value by running the topt library on this secret key with the date 2010-01-01 00:00
       });
 
@@ -95,7 +95,7 @@ namespace Otp.ApiTests
       OtpController.UtcNow = () => new DateTimeOffset(2020, 01, 01, 0, 0, 10, new TimeSpan(0, 0, 0));
       var requestInput = JsonSerializer.Serialize(new OtpController.VerifyRequest
       {
-        UserId = Guid.Parse("00000000-0000-0000-0000-123456789012"),
+        LoginId = "mary",
         OneTimePassword = "incorrect",
       });
 

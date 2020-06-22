@@ -27,8 +27,11 @@ namespace Otp.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("LoginId")
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("SecretKey")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
 

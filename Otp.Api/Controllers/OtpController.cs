@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Otp.Api.Data;
 using OtpNet;
 
@@ -21,7 +23,10 @@ namespace Otp.Api.Controllers
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] CreateRequest request)
     {
-      var user = await dbContext.Users.FindAsync(request.UserId);
+      var user = await dbContext
+        .Users
+        .Where(u => u.LoginId == request.LoginId)
+        .FirstOrDefaultAsync();
       if(user == null) {
         return NotFound();
       }
@@ -38,7 +43,10 @@ namespace Otp.Api.Controllers
     [HttpPost("verify")]
     public async Task<ActionResult> Verify([FromBody] VerifyRequest request) 
     {
-      var user = await dbContext.Users.FindAsync(request.UserId);
+      var user = await dbContext
+        .Users
+        .Where(u => u.LoginId == request.LoginId)
+        .FirstOrDefaultAsync();
       if(user == null) {
         return Unauthorized();
       }
@@ -57,7 +65,7 @@ namespace Otp.Api.Controllers
     }
 
     public class CreateRequest {
-      public Guid UserId {get;set;}
+      public string LoginId {get;set;}
       public DateTimeOffset CreatedAt {get;set;}
     }
 
@@ -68,7 +76,7 @@ namespace Otp.Api.Controllers
 
     public class VerifyRequest
     {
-      public Guid UserId {get;set;}      
+      public string LoginId {get;set;}      
       public string OneTimePassword { get; set; }
     }
   }
