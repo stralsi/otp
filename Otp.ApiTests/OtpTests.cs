@@ -20,10 +20,13 @@ namespace Otp.ApiTests
     private readonly HttpClient httpClient;
     private readonly ApplicationDbContext dbContext;
     private readonly CustomWebApplicationFactory<Otp.Api.Startup>  webAppFactory;
+
+    private DateTimeOffset testDate = new DateTimeOffset(2020, 01, 01, 0, 0, 0, new TimeSpan(0, 0, 0));
     public OtpTests(CustomWebApplicationFactory<Otp.Api.Startup> factory)
     {
       this.httpClient = factory.CreateClient();
       this.webAppFactory = factory;
+      OtpController.UtcNow = () => testDate.AddSeconds(1);
     }
 
     [Fact]
@@ -32,7 +35,7 @@ namespace Otp.ApiTests
       var requestInput = JsonSerializer.Serialize(new OtpController.CreateRequest
       {
         LoginId = "mary",
-        CreatedAt = new DateTimeOffset(2020, 01, 01, 0, 0, 0, new TimeSpan(0, 0, 0))
+        CreatedAt = testDate,
       });
 
       var response = await httpClient.PostAsync("/api/otp", new StringContent(requestInput, Encoding.UTF8, "application/json"));
@@ -43,26 +46,38 @@ namespace Otp.ApiTests
       // This test can probably be more sophisticated, but I trust the otp library works
       Assert.NotNull(parsedContent.OneTimePassword);
       // expires 30 seconds later
-      Assert.Equal(new DateTimeOffset(2020, 01, 01, 0, 0, 30, new TimeSpan(0, 0, 0)), parsedContent.ExpiresAt);
+      Assert.Equal(testDate.AddSeconds(30), parsedContent.ExpiresAt);
     }
 
     [Fact]
-    public async Task Create_UserNotFound_Returns404()
+    public async Task Create_UserNotFound_ReturnsUnauthorized()
     {
       var requestInput = JsonSerializer.Serialize(new OtpController.CreateRequest
       {
         LoginId = "does not exist",
-        CreatedAt = DateTimeOffset.UtcNow
+        CreatedAt = testDate,
       });
       var response = await httpClient.PostAsync("/api/otp", new StringContent(requestInput, Encoding.UTF8, "application/json"));
 
-      Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+      Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Create_NoDate_ReturnsBadRequest()
+    {
+      var requestInput = JsonSerializer.Serialize(new OtpController.CreateRequest
+      {
+        LoginId = "mary",
+      });
+
+      var response = await httpClient.PostAsync("/api/otp", new StringContent(requestInput, Encoding.UTF8, "application/json"));
+
+      Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }    
 
     [Fact]
     public async Task Verify_CorrectInput_Successful()
     {
-      OtpController.UtcNow = () => new DateTimeOffset(2020, 01, 01, 0, 0, 10, new TimeSpan(0, 0, 0));
       var requestInput = JsonSerializer.Serialize(new OtpController.VerifyRequest
       {
         LoginId = "mary",
@@ -77,7 +92,6 @@ namespace Otp.ApiTests
     [Fact]
     public async Task Verify_Incorrectusername_Unauthorized()
     {
-      OtpController.UtcNow = () => new DateTimeOffset(2020, 01, 01, 0, 0, 10, new TimeSpan(0, 0, 0));
       var requestInput = JsonSerializer.Serialize(new OtpController.VerifyRequest
       {
         LoginId = "does not exist",
@@ -92,7 +106,6 @@ namespace Otp.ApiTests
     [Fact]
     public async Task Verify_IncorrectPassword_Unauthorized()
     {
-      OtpController.UtcNow = () => new DateTimeOffset(2020, 01, 01, 0, 0, 10, new TimeSpan(0, 0, 0));
       var requestInput = JsonSerializer.Serialize(new OtpController.VerifyRequest
       {
         LoginId = "mary",

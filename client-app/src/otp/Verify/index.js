@@ -7,7 +7,6 @@ import {
 } from "baseui/card";
 import Centered from "../../components/Centered";
 
-
 export default function Verify() {
   const [values, setValues] = React.useState(["", "", "", "", "", ""]);
 

@@ -27,6 +27,17 @@ namespace Otp.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options => 
+            {
+                options.AddPolicy(name: "devCORS",
+                builder => 
+                {
+                    builder.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+            });
+
             services.AddControllers();
 
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -38,6 +49,7 @@ namespace Otp.Api
         {
             if (env.IsDevelopment())
             {
+                app.UseCors("devCORS");
                 app.UseDeveloperExceptionPage();
             }
 

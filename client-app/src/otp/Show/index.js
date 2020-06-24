@@ -10,16 +10,19 @@ import {
 import ExpirationTimer from "./ExpirationTimer";
 import Centered from "../../components/Centered";
 
-export default function Show() {
+export default function Show({
+  password,
+  expiresAt,
+}) {
   return (
     <Card title="Your one time password is">
       <StyledBody>
           <Centered>
             <HeadingLevel>
 
-              <Heading>123456</Heading>
+              <Heading>{password}</Heading>
             </HeadingLevel>
-            <ExpirationTimer expirationDate={new Date(new Date().getTime() + 30000)} />
+            <ExpirationTimer expirationDate={expiresAt} />
           </Centered>
       </StyledBody>
     </Card>

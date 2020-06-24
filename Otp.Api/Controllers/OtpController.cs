@@ -23,12 +23,17 @@ namespace Otp.Api.Controllers
     [HttpPost]
     public async Task<ActionResult> Create([FromBody] CreateRequest request)
     {
+      // This accounts for missing dates, which will get the default value of {1/1/0001 12:00:00 AM}
+      if(request.CreatedAt < UtcNow().AddMinutes(-1)) {
+        return BadRequest(new {Errors = new {CreatedAt = "Missing or invalid"}});
+      }
+
       var user = await dbContext
         .Users
         .Where(u => u.LoginId == request.LoginId)
         .FirstOrDefaultAsync();
       if(user == null) {
-        return NotFound();
+        return Unauthorized();
       }
       var otpCalc = new Totp(System.Text.Encoding.UTF8.GetBytes(user.SecretKey));
       var otp = otpCalc.ComputeTotp(request.CreatedAt.UtcDateTime);
