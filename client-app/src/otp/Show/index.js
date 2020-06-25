@@ -13,6 +13,7 @@ import Centered from "../../components/Centered";
 export default function Show({
   password,
   expiresAt,
+  now = () => new Date(),
 }) {
   return (
     <Card title="Your one time password is">
@@ -22,7 +23,7 @@ export default function Show({
 
               <Heading>{password}</Heading>
             </HeadingLevel>
-            <ExpirationTimer expirationDate={expiresAt} />
+            <ExpirationTimer expirationDate={expiresAt} now={now} />
           </Centered>
       </StyledBody>
     </Card>

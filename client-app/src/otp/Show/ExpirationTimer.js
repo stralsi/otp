@@ -8,18 +8,21 @@ function percentFromSecondsLeft (secondsLeft, secondsTotal = 30) {
   return diffPercent > 0 ? diffPercent : 0;
 }
 
+function secondsDiff(date1, date2) {
+  const diffTime = date1 - date2;
+  return diffTime / 1000;
+}
+
 export default function ExpirationTimer ({
   expirationDate = new Date(),
   secondsTotal = 30,
+  now = () => new Date(),
 }) {
-  const [secondsLeft, setSecondsLeft] = useState(30);
-
+  const [secondsLeft, setSecondsLeft] = useState(secondsDiff(expirationDate, now()));
 
   useEffect(() => {
     setTimeout(() => {
-      const diffTime = expirationDate - new Date();
-      const diffSeconds = diffTime / 1000;
-      setSecondsLeft(diffSeconds);
+      setSecondsLeft(secondsDiff(expirationDate, now()))
     },100)
   })
 
